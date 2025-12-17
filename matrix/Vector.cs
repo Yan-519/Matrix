@@ -24,7 +24,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public Vector(ReadOnlySpan<T> data) : this(data.ToArray()) { }
 
-    private Vector(RootClass<T> root) : this(root.GetColumn(0)) { }
+    private Vector(RootClass<T> root) : base(((Matrix<T>)root).source) { }
 
     public T this[int r]
     {

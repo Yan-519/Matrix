@@ -141,7 +141,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         return result;
     }
 
-    public T[] GetColumn(int c)
+    protected T[] GetColumn(int c)
     {
         T[] result = new T[Size.Rows];
         for (int i = 0; i < Size.Rows; i++)

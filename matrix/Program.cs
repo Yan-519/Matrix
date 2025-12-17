@@ -75,27 +75,12 @@ internal class Program
 
     static void Main()
     {
-        //int test_n = (int)Math.Pow(10, 5);
+        int test_n = (int)Math.Pow(10, 5);
 
-        //Console.WriteLine(test_func(nameof(fib), fib, test_n));
-        //Console.WriteLine(test_func(nameof(standart_fib), standart_fib, test_n));
+        Console.WriteLine(test_func(nameof(fib), fib, test_n));
+        Console.WriteLine(test_func(nameof(standart_fib), standart_fib, test_n));
 
-        var lst = fib_lst(1000);
-
-        Console.WriteLine(string.Join("\n", lst.Select(i => i.ToString())));
-
-        //Matrix<int> matrix = new([1, 2, 3],
-        //                             [0, 1, 4],
-        //                             [5, 6, 0]);
-
-        //Console.WriteLine(matrix * 2);
-
-        //Vector<int> vector = [1, 2, 3, 0];
-
-
-        //Console.WriteLine("\n" + vector.);
-
-        //foreach (BigInteger n in fib_lst(3))
-        //    Console.WriteLine(n);
+        foreach (BigInteger n in fib_lst(3))
+            Console.WriteLine(n);
     }
 }
