@@ -4,7 +4,7 @@ public record ObjectSize(int Rows, int Columns);
 
 public class RootClass<T> where T : System.Numerics.INumber<T>
 {
-    public ObjectSize Size { get; init; }
+    public ObjectSize _Size { get; init; }
 
     protected T[,] _matrix;
 
@@ -17,7 +17,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
     protected RootClass(int rows, int columns)
     {
         _matrix = new T[rows, columns];
-        Size = new ObjectSize(rows, columns);
+        _Size = new ObjectSize(rows, columns);
     }
 
 
@@ -27,11 +27,11 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static bool operator ==(RootClass<T> a, RootClass<T> b)
     {
-        if (a.Size != b.Size)
+        if (a._Size != b._Size)
             return false;
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < a.Size.Columns; j++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < a._Size.Columns; j++)
                 if (a[i, j] != b[i, j])
                     return false;
 
@@ -42,10 +42,10 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator *(RootClass<T> a, T scalar)
     {
-        RootClass<T> result = new(a.Size);
+        RootClass<T> result = new(a._Size);
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < a.Size.Columns; j++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < a._Size.Columns; j++)
                 result[i, j] = a[i, j] * scalar;
 
         return result;
@@ -58,9 +58,9 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         if (scalar == T.Zero)
             throw new DivideByZeroException("Cannot divide by zero.");
 
-        RootClass<T> result = new(a.Size);
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < a.Size.Columns; j++)
+        RootClass<T> result = new(a._Size);
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < a._Size.Columns; j++)
                 result[i, j] = a[i, j] / scalar;
 
         return result;
@@ -68,7 +68,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator +(RootClass<T> a, RootClass<T> b)
     {
-        if (a.Size != b.Size)
+        if (a._Size != b._Size)
             throw new InvalidOperationException("Matrices must have the same dimensions for addition.");
 
         return Add_Subtract_for_same(a, b, true);
@@ -76,7 +76,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator -(RootClass<T> a, RootClass<T> b)
     {
-        if (a.Size != b.Size)
+        if (a._Size != b._Size)
             throw new InvalidOperationException("Matrices must have the same dimensions for subtraction.");
 
         return Add_Subtract_for_same(a, b, false);
@@ -85,12 +85,12 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected static RootClass<double> Add_Subtract_for_diff(RootClass<T> a, RootClass<double> b, bool is_positive)
     {
-        RootClass<double> result = new(a.Size);
+        RootClass<double> result = new(a._Size);
 
         double sign = is_positive ? 1 : -1;
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < a.Size.Columns; j++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < a._Size.Columns; j++)
                 result[i, j] = double.CreateChecked(a[i, j]) + b[i, j] * sign;
 
         return result;
@@ -98,12 +98,12 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected static RootClass<T> Add_Subtract_for_same(RootClass<T> a, RootClass<T> b, bool is_positive)
     {
-        RootClass<T> result = new(a.Size);
+        RootClass<T> result = new(a._Size);
 
         T sign = is_positive ? T.One : -T.One;
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < a.Size.Columns; j++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < a._Size.Columns; j++)
                 result[i, j] = a[i, j] + b[i, j] * sign;
 
         return result;
@@ -112,7 +112,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<double> Add(RootClass<T> a, RootClass<double> b)
     {
-        if (a.Size != b.Size)
+        if (a._Size != b._Size)
             throw new InvalidOperationException("Matrices must have the same dimensions for addition.");
 
         return Add_Subtract_for_diff(a, b, true);
@@ -122,7 +122,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<double> Subtract(RootClass<T> a, RootClass<double> b)
     {
-        if (a.Size != b.Size)
+        if (a._Size != b._Size)
             throw new InvalidOperationException("Matrices must have the same dimensions for subtraction.");
 
         return Add_Subtract_for_diff(a, b, false);
@@ -134,8 +134,8 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected T[] GetRow(int r)
     {
-        T[] result = new T[Size.Columns];
-        for (int j = 0; j < Size.Columns; j++)
+        T[] result = new T[_Size.Columns];
+        for (int j = 0; j < _Size.Columns; j++)
             result[j] = _matrix[r, j];
 
         return result;
@@ -143,8 +143,8 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected T[] GetColumn(int c)
     {
-        T[] result = new T[Size.Rows];
-        for (int i = 0; i < Size.Rows; i++)
+        T[] result = new T[_Size.Rows];
+        for (int i = 0; i < _Size.Rows; i++)
             result[i] = _matrix[i, c];
         return result;
     }
@@ -152,9 +152,9 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
     public override string ToString()
     {
         System.Text.StringBuilder sb = new();
-        for (int i = 0; i < Size.Rows; i++)
+        for (int i = 0; i < _Size.Rows; i++)
         {
-            for (int j = 0; j < Size.Columns; j++)
+            for (int j = 0; j < _Size.Columns; j++)
                 sb.Append(_matrix[i, j].ToString() + "\t");
             sb.Append('\n');
         }

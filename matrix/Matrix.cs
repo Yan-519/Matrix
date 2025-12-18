@@ -6,8 +6,8 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
     {
         get
         {
-            T[][] result = new T[Size.Rows][];
-            for (int i = 0; i < Size.Rows; i++)
+            T[][] result = new T[_Size.Rows][];
+            for (int i = 0; i < _Size.Rows; i++)
                 result[i] = GetRow(i);
 
             return result;
@@ -18,8 +18,8 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
     {
         get
         {
-            T[][] result = new T[Size.Columns][];
-            for (int j = 0; j < Size.Columns; j++)
+            T[][] result = new T[_Size.Columns][];
+            for (int j = 0; j < _Size.Columns; j++)
                 result[j] = GetColumn(j);
 
             return result;
@@ -33,6 +33,7 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
     }
 
     public T[,] source => (T[,]) _matrix.Clone();
+    public ObjectSize Size => _Size;
 
     public bool IsSquare { get; init; }
 
@@ -49,19 +50,19 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
 
     public Matrix(int rows, int columns) : base(rows, columns) => IsSquare = rows == columns;
 
-    private Matrix(RootClass<T> root) : this(root.Size)
+    private Matrix(RootClass<T> root) : this(root._Size)
         => _matrix = ((Matrix<T>)root).source;
 
     public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b)
     {
-        if (a.Size.Columns != b.Size.Rows)
+        if (a._Size.Columns != b._Size.Rows)
             throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
 
-        Matrix<T> result = new (a.Size.Rows, b.Size.Columns);
+        Matrix<T> result = new (a._Size.Rows, b._Size.Columns);
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < b.Size.Columns; j++)
-                for (int k = 0; k < a.Size.Columns; k++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < b._Size.Columns; j++)
+                for (int k = 0; k < a._Size.Columns; k++)
                     result[i, j] += a[i, k] * b[k, j];
 
         return result;
@@ -75,7 +76,7 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
         if (power < 0)
             throw new ArgumentOutOfRangeException(nameof(power), "Power must be non-negative.");
 
-        Matrix<T> result = I(a.Size.Rows);
+        Matrix<T> result = I(a._Size.Rows);
 
         for (int i = 0; i < power; i++)
             result *= a;
@@ -88,19 +89,16 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
     public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => new((RootClass<T>)a - (RootClass<T>)b);
 
 
-    public void transpose_on() => _matrix = transpose().source;
-    public void adj_on() => _matrix = adj().source;
-    public void inv_on()
-    {
-        Matrix<T> inverted = inv() ??
-            throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+    //public void transpose_on() => _matrix = transpose().source;
+    //public void adj_on() => _matrix = adj().source;
+    //public void inv_on()
+    //{
+    //    Matrix<T> inverted = inv() ??
+    //        throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
-        _matrix = inverted.source;
-    }
+    //    _matrix = inverted.source;
+    //}
 
-    public T det() => det(this._matrix);
-    public Matrix<T> adj() => adj(this);
-    public Matrix<T>? inv() => invert(this);
 
     public T trace()
     {
@@ -108,7 +106,7 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
             throw new InvalidOperationException("Trace is only defined for square matrices.");
 
         T trace = T.Zero;
-        for (int i = 0; i < Size.Rows; i++)
+        for (int i = 0; i < _Size.Rows; i++)
             trace += _matrix[i, i];
 
         return trace;
@@ -116,10 +114,10 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
 
     public Matrix<T> transpose()
     {
-        Matrix<T> transposed = new (Size.Columns, Size.Rows);
+        Matrix<T> transposed = new (_Size.Columns, _Size.Rows);
 
-        for (int i = 0; i < Size.Rows; i++)
-            for (int j = 0; j < Size.Columns; j++)
+        for (int i = 0; i < _Size.Rows; i++)
+            for (int j = 0; j < _Size.Columns; j++)
                 transposed[j, i] = _matrix[i, j];
 
         return transposed;
@@ -162,19 +160,20 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
 
         return determinant;
     }
-
     public static T determinant(Matrix<T> matrix) => det(matrix._matrix);
+    public T determinant() => det(this._matrix);
 
     public static Matrix<T> adj(Matrix<T> matrix)
     {
-        Matrix<T> adjuvate = new(matrix.Size);
+        Matrix<T> adjuvate = new(matrix._Size);
 
-        for (int row = 0; row < matrix.Size.Rows; row++)
-            for (int col = 0; col < matrix.Size.Columns; col++)
+        for (int row = 0; row < matrix._Size.Rows; row++)
+            for (int col = 0; col < matrix._Size.Columns; col++)
                 adjuvate[col, row] = T.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix._matrix, row, col));
 
         return adjuvate;
     }
+    public Matrix<T> adj() => adj(this);
 
     public static Matrix<T>? invert(Matrix<T> matrix)
     {
@@ -184,6 +183,7 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
 
         return adj(matrix) / determinant;
     }
+    public Matrix<T>? inv() => invert(this);
 
     public static Matrix<T> I(int s)
     {
@@ -197,14 +197,14 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
 
     public static Matrix<double> Multiply(Matrix<T> a, Matrix<double> b)
     {
-        if (a.Size.Columns != b.Size.Rows)
+        if (a._Size.Columns != b._Size.Rows)
             throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
 
-        Matrix<double> result = new(a.Size.Rows, b.Size.Columns);
+        Matrix<double> result = new(a._Size.Rows, b._Size.Columns);
 
-        for (int i = 0; i < a.Size.Rows; i++)
-            for (int j = 0; j < b.Size.Columns; j++)
-                for (int k = 0; k < a.Size.Columns; k++)
+        for (int i = 0; i < a._Size.Rows; i++)
+            for (int j = 0; j < b._Size.Columns; j++)
+                for (int k = 0; k < a._Size.Columns; k++)
                     result[i, j] += double.CreateChecked(a[i, k]) * b[k, j];
 
         return result;

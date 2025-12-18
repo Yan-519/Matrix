@@ -75,6 +75,12 @@ internal class Program
 
     static void Main()
     {
+        Vector<double> v = [1.5, 100, 83.5, 10];
+
+        Console.WriteLine(v.Norm() + "\n");
+        Console.WriteLine(v.ToVectorOfOne());
+        return;
+
         int test_n = (int)Math.Pow(10, 5);
 
         Console.WriteLine(test_func(nameof(fib), fib, test_n));
