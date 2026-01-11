@@ -166,4 +166,34 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         => obj is RootClass<T> other && this == other;
 
     public override int GetHashCode() => _matrix.GetHashCode();
+
+    protected Vector<T> ToOneD()
+    {
+        Vector<T> vec = new(_Size.Rows * _Size.Columns);
+        for (int i = 0; i < _Size.Rows; i++)
+            for (int j = 0; j < _Size.Columns; j++)
+                vec[i * _Size.Columns + j] = this[i, j];
+        return vec;
+    }
+
+    private static RootClass<T>[] Base(params RootClass<T>[] objects)
+    {
+        if (objects.Length == 0 || objects.Any(b => b._Size != objects[0]._Size))
+            throw new InvalidOperationException("Matrices must have the same dimensions to form a basis.");
+
+        if (objects[0]._Size.Columns * objects[0]._Size.Rows == 1)
+            return [new RootClass<T>(new T[,] { { T.One } })];
+
+        if (objects.Length == 1)
+            return objects;
+
+
+        Vector<T>[] vectors = objects.Select(obj => obj.ToOneD()).ToArray();
+
+        vectors = vectors.Where(v => !v.All(t => t == T.Zero)).ToArray();
+        if (vectors.Length == 0)
+            return [new RootClass<T>(new T[objects[0]._Size.Rows, objects[0]._Size.Columns])];
+
+        return [];
+    }
 }
