@@ -31,7 +31,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public Vector(ReadOnlySpan<T> data) : this(data.ToArray()) { }
 
-    private Vector(RootClass<T> root) : base(((Matrix<T>)root).source) { }
+    private Vector(RootClass<T> root) : base(root._source) { }
 
     public T this[int r]
     {
@@ -92,4 +92,18 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+
+    public Matrix<T> FromeOneD(ObjectSize size)
+    {
+        Matrix<T> matrix = new Matrix<T>(size);
+        for (int i = 0; i < size.Rows; i++)
+            for (int j = 0; j < size.Columns; j++)
+                matrix[i, j] = this[i * size.Columns + j];
+
+        return matrix;
+    }
+
+    public static Vector<T>[] Base(Vector<T>[] vectors) => BaseOfBase(vectors);
+
 }

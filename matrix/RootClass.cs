@@ -8,6 +8,8 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected T[,] _matrix;
 
+    public T[,] _source => (T[,])_matrix.Clone();
+
     private T this[int r, int c]
     {
         get => _matrix[r, c];
@@ -176,24 +178,69 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         return vec;
     }
 
-    private static RootClass<T>[] Base(params RootClass<T>[] objects)
+
+    private static (Vector<T>[] v, bool is_changed) ToZero(Vector<T>[] vectors, int x, int y)
+    {
+        if (vectors[vectors.Length - 1 - y][x] == T.Zero)
+            return (vectors, true);
+
+        Vector<T> currnt = vectors[vectors.Length - 1 - y];
+
+        for (int i = vectors.Length - 2 - y; i >= 0; i--)
+        {
+            Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
+
+            bool is_good = true;
+
+            for (int j = 0; j < x; j++)
+            {
+                if(temp[j] != T.Zero)
+                {
+                    is_good = false;
+                    break;
+                }
+            }
+            if (is_good)
+            {
+                vectors[vectors.Length - 1 - y] = temp;
+                return (vectors, true);
+            }
+        }
+
+        return (vectors, false);
+    }
+
+    protected static Vector<T>[] BaseOfBase(RootClass<T>[] objects)
     {
         if (objects.Length == 0 || objects.Any(b => b._Size != objects[0]._Size))
-            throw new InvalidOperationException("Matrices must have the same dimensions to form a basis.");
+            throw new InvalidOperationException("These objects must have the same dimensions to form a basis.");
 
         if (objects[0]._Size.Columns * objects[0]._Size.Rows == 1)
-            return [new RootClass<T>(new T[,] { { T.One } })];
-
-        if (objects.Length == 1)
-            return objects;
-
+            return [new Vector<T>(T.One)];
 
         Vector<T>[] vectors = objects.Select(obj => obj.ToOneD()).ToArray();
 
-        vectors = vectors.Where(v => !v.All(t => t == T.Zero)).ToArray();
-        if (vectors.Length == 0)
-            return [new RootClass<T>(new T[objects[0]._Size.Rows, objects[0]._Size.Columns])];
+        if (objects.Length == 1)
+            return vectors;
 
-        return [];
+        vectors = vectors.Where(v => v.Any(t => t != T.Zero)).ToArray();
+        if (vectors.Length == 0)
+            return [new Vector<T>(objects[0]._Size.Rows * objects[0]._Size.Columns)];
+
+
+        int stop = Math.Max(objects[0]._Size.Columns, objects[0]._Size.Rows) - 1;
+
+        for (int y = 0; y < stop; y++)
+        {
+            for (int x = 0; x < stop - y; x++)
+            {
+                (vectors, bool is_changed) = ToZero(vectors, x, y);
+                Console.WriteLine($"{x} {y}");
+                if (!is_changed && x + 1 < stop - y)
+                    y++;
+            }
+        }
+
+        return vectors;
     }
 }

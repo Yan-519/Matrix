@@ -213,4 +213,7 @@ public class Matrix<T> : RootClass<T> where T : System.Numerics.INumber<T>
     public static Matrix<double> Multiply(Matrix<double> a, Matrix<T> b) => Multiply(b, a);
 
     public Vector<T> ToVector() => new(R[0]);
+
+    public static Matrix<T>[] Base(Matrix<T>[] matrices)
+        => BaseOfBase(matrices).Select(v => new Matrix<T>(v.FromeOneD(matrices[0]._Size)._matrix)).ToArray();
 }

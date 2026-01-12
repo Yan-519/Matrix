@@ -75,18 +75,9 @@ internal class Program
 
     static void Main()
     {
-        Vector<double> v = [1.5, 100, 83.5, 10];
+        Vector<double>[] vectors = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
-        Console.WriteLine(v.Norm() + "\n");
-        Console.WriteLine(v.ToVectorOfOne());
-        return;
-
-        int test_n = (int)Math.Pow(10, 5);
-
-        Console.WriteLine(test_func(nameof(fib), fib, test_n));
-        Console.WriteLine(test_func(nameof(standart_fib), standart_fib, test_n));
-
-        foreach (BigInteger n in fib_lst(3))
-            Console.WriteLine(n);
+        foreach(Vector<double> vector in Vector<double>.Base(vectors))
+            Console.WriteLine(vector);
     }
 }
