@@ -93,6 +93,15 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+    public string ToString(string split = ", ", string start = "[", string end = "]")
+    {
+        System.Text.StringBuilder sb = new(start);
+        for (int i = 0; i < _Size.Rows; i++)
+            sb.Append(this[i] + (i < _Size.Rows - 1 ? split : end));
+        return sb.ToString();
+    }
+
+    public override string ToString() => ToString();
 
     public Matrix<T> FromeOneD(ObjectSize size)
     {

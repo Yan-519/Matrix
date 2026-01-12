@@ -151,14 +151,16 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         return result;
     }
 
-    public override string ToString()
+    public override string ToString() => ToString();
+
+    public string ToString(string split = "\t", string LineEnd = "\n")
     {
         System.Text.StringBuilder sb = new();
         for (int i = 0; i < _Size.Rows; i++)
         {
             for (int j = 0; j < _Size.Columns; j++)
-                sb.Append(_matrix[i, j].ToString() + "\t");
-            sb.Append('\n');
+                sb.Append(_matrix[i, j].ToString() + split);
+            sb.Append(LineEnd);
         }
 
         return sb.ToString();
@@ -179,35 +181,61 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
     }
 
 
-    private static (Vector<T>[] v, bool is_changed) ToZero(Vector<T>[] vectors, int x, int y)
+    private static Vector<T>[] ToZero(Vector<T>[] vectors, int x, int y, bool is_reverse = false)
     {
-        if (vectors[vectors.Length - 1 - y][x] == T.Zero)
-            return (vectors, true);
+        if (vectors[y][x] == T.Zero)
+            return vectors;
 
-        Vector<T> currnt = vectors[vectors.Length - 1 - y];
+        Vector<T> currnt = vectors[y];
+        int zero_count = currnt.Count(t => t == T.Zero);
 
-        for (int i = vectors.Length - 2 - y; i >= 0; i--)
-        {
-            Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
-
-            bool is_good = true;
-
-            for (int j = 0; j < x; j++)
+        if (!is_reverse)
+            for (int i = y - 1; i >= 0; i--)
             {
-                if(temp[j] != T.Zero)
+                Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
+
+                if (temp.Count(t => t == T.Zero) >= zero_count)
                 {
-                    is_good = false;
-                    break;
+                    vectors[y] = temp;
+                    return vectors;
                 }
             }
-            if (is_good)
+
+        else
+        {
+            for (int i = y; i < vectors.Length; i++)
             {
-                vectors[vectors.Length - 1 - y] = temp;
-                return (vectors, true);
+                Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
+
+                if (temp.Count(t => t == T.Zero) >= zero_count)
+                {
+                    vectors[y] = temp;
+                    return vectors;
+                }
             }
         }
 
-        return (vectors, false);
+        return vectors;
+    }
+
+    public static T GetGcd(Vector<T> numbers, double epsilon = 1e-10)
+    {
+        static T CalculateGcd(T a, T b, T epsilon)
+        {
+            a = T.Abs(a);
+            b = T.Abs(b);
+
+            while (b > epsilon)
+                (a, b) = (b, a % b);
+            return a;
+        }
+
+        if (numbers is null || numbers.size == 0) return T.Zero;
+
+        T ep = T.CreateChecked(epsilon);
+        T sgn = numbers.All(t => T.IsNegative(t) || T.IsZero(t)) ? -T.One : T.One;
+
+        return numbers.Aggregate((gcd, next) => CalculateGcd(gcd, next, ep)) * sgn;
     }
 
     protected static Vector<T>[] BaseOfBase(RootClass<T>[] objects)
@@ -230,16 +258,34 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
         int stop = Math.Max(objects[0]._Size.Columns, objects[0]._Size.Rows) - 1;
 
-        for (int y = 0; y < stop; y++)
+        for (int x = 0; x < vectors[0].size - 1; x++)
         {
-            for (int x = 0; x < stop - y; x++)
+            for (int y = 0; y < objects.Length - x; y++)
             {
-                (vectors, bool is_changed) = ToZero(vectors, x, y);
-                Console.WriteLine($"{x} {y}");
-                if (!is_changed && x + 1 < stop - y)
-                    y++;
+                vectors = ToZero(vectors, x, vectors.Length - 1 - y)
+                    .Where(v => v.Any(t => t != T.Zero)).ToArray();
             }
         }
+
+
+        //for (int x = 0; x < vectors[0].size - 1; x++)
+        //{
+        //    Console.WriteLine(vectors.First());
+        //    vectors = ToZero(vectors, x, 0, true)
+        //            .Where(v => v.Any(t => t != T.Zero)).ToArray();
+        //}
+
+        //Console.WriteLine();
+
+        for (int i = 0; i < vectors.Length; i++)
+        {
+            T gcd = GetGcd(vectors[i]);
+            for (int j = 0; j < vectors[i].size; j++)
+                if (!T.IsZero(vectors[i][j]))
+                    vectors[i][j] /= gcd;
+        }
+
+        vectors = Enumerable.OrderBy(vectors, v => v.Count(t => T.IsZero(t))).ToArray();
 
         return vectors;
     }

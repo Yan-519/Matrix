@@ -75,9 +75,9 @@ internal class Program
 
     static void Main()
     {
-        Vector<double>[] vectors = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+        Vector<double>[] vectors = [[1, 2, 3], [4, 5, 6], [7324, 87153, 813]];
 
         foreach(Vector<double> vector in Vector<double>.Base(vectors))
-            Console.WriteLine(vector);
+            Console.WriteLine(vector.ToString("\t"));
     }
 }
