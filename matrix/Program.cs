@@ -64,18 +64,18 @@ internal class Program
     }
 
 
-    private static string test_func(string name, Func<int, BigInteger> func, int n)
+    private static Tuple<long, Out> test_func<In, Out>(Func<In, Out> func, In n)
     {
         Stopwatch sw = Stopwatch.StartNew();
-        _ = func(n);
+        Out o = func(n);
         sw.Stop();
-        return $"{name}({n}), Time: {sw.ElapsedMilliseconds} ms";
+        return new Tuple<long, Out>(sw.ElapsedMilliseconds, o);
     }
 
 
     static void Main()
     {
-        Vector<double>[] vectors = [[1, 2, 3], [4, 5, 6], [7324, 87153, 813]];
+        Vector<double>[] vectors = [[1, 2, 3], [7324, 87153, 813], [287, 7, 0]];
 
         foreach(Vector<double> vector in Vector<double>.Base(vectors))
             Console.WriteLine(vector.ToString("\t"));

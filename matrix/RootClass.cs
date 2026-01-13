@@ -1,10 +1,12 @@
-﻿namespace matrix;
+﻿using System.Numerics;
+
+namespace matrix;
 
 public record ObjectSize(int Rows, int Columns);
 
-public class RootClass<T> where T : System.Numerics.INumber<T>
+public class RootClass<T> where T : INumber<T>
 {
-    public ObjectSize _Size { get; init; }
+    public ObjectSize size { get; init; }
 
     protected T[,] _matrix;
 
@@ -19,21 +21,21 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
     protected RootClass(int rows, int columns)
     {
         _matrix = new T[rows, columns];
-        _Size = new ObjectSize(rows, columns);
+        size = new ObjectSize(rows, columns);
     }
-
 
     protected RootClass(ObjectSize size) : this(size.Rows, size.Columns) { }
 
-    protected RootClass(T[,] data) : this(data.GetLength(0), data.GetLength(1)) => _matrix = (T[,])data.Clone();
+    protected RootClass(T[,] data) : this(data.GetLength(0), data.GetLength(1))
+        => _matrix = (T[,])data.Clone();
 
     public static bool operator ==(RootClass<T> a, RootClass<T> b)
     {
-        if (a._Size != b._Size)
+        if (a.size != b.size)
             return false;
 
-        for (int i = 0; i < a._Size.Rows; i++)
-            for (int j = 0; j < a._Size.Columns; j++)
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < a.size.Columns; j++)
                 if (a[i, j] != b[i, j])
                     return false;
 
@@ -44,10 +46,10 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator *(RootClass<T> a, T scalar)
     {
-        RootClass<T> result = new(a._Size);
+        RootClass<T> result = new(a.size);
 
-        for (int i = 0; i < a._Size.Rows; i++)
-            for (int j = 0; j < a._Size.Columns; j++)
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < a.size.Columns; j++)
                 result[i, j] = a[i, j] * scalar;
 
         return result;
@@ -60,9 +62,9 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
         if (scalar == T.Zero)
             throw new DivideByZeroException("Cannot divide by zero.");
 
-        RootClass<T> result = new(a._Size);
-        for (int i = 0; i < a._Size.Rows; i++)
-            for (int j = 0; j < a._Size.Columns; j++)
+        RootClass<T> result = new(a.size);
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < a.size.Columns; j++)
                 result[i, j] = a[i, j] / scalar;
 
         return result;
@@ -70,7 +72,7 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator +(RootClass<T> a, RootClass<T> b)
     {
-        if (a._Size != b._Size)
+        if (a.size != b.size)
             throw new InvalidOperationException("Matrices must have the same dimensions for addition.");
 
         return Add_Subtract_for_same(a, b, true);
@@ -78,66 +80,67 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     public static RootClass<T> operator -(RootClass<T> a, RootClass<T> b)
     {
-        if (a._Size != b._Size)
+        if (a.size != b.size)
             throw new InvalidOperationException("Matrices must have the same dimensions for subtraction.");
 
         return Add_Subtract_for_same(a, b, false);
     }
 
 
-    protected static RootClass<double> Add_Subtract_for_diff(RootClass<T> a, RootClass<double> b, bool is_positive)
+    protected static RootClass<double> Add_Subtract_for_diff<LocalT>(RootClass<LocalT> a, RootClass<double> b, bool is_positive) where LocalT : INumber<LocalT>
     {
-        RootClass<double> result = new(a._Size);
+        RootClass<double> result = new(a.size);
 
         double sign = is_positive ? 1 : -1;
 
-        for (int i = 0; i < a._Size.Rows; i++)
-            for (int j = 0; j < a._Size.Columns; j++)
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < a.size.Columns; j++)
                 result[i, j] = double.CreateChecked(a[i, j]) + b[i, j] * sign;
 
         return result;
     }
 
-    protected static RootClass<T> Add_Subtract_for_same(RootClass<T> a, RootClass<T> b, bool is_positive)
+    protected static RootClass<LocalT> Add_Subtract_for_same<LocalT>(RootClass<LocalT> a, RootClass<LocalT> b, bool is_positive) where LocalT : INumber<LocalT>
     {
-        RootClass<T> result = new(a._Size);
+        RootClass<LocalT> result = new(a.size);
 
-        T sign = is_positive ? T.One : -T.One;
 
-        for (int i = 0; i < a._Size.Rows; i++)
-            for (int j = 0; j < a._Size.Columns; j++)
+        LocalT sign = is_positive ? LocalT.One : -LocalT.One;
+
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < a.size.Columns; j++)
                 result[i, j] = a[i, j] + b[i, j] * sign;
 
         return result;
     }
 
 
-    public static RootClass<double> Add(RootClass<T> a, RootClass<double> b)
+    public static RootClass<double> Add<LocalT>(RootClass<LocalT> a, RootClass<double> b) where LocalT : INumber<LocalT>
     {
-        if (a._Size != b._Size)
+        if (a.size != b.size)
             throw new InvalidOperationException("Matrices must have the same dimensions for addition.");
 
         return Add_Subtract_for_diff(a, b, true);
     }
 
-    public static RootClass<double> Add(RootClass<double> a, RootClass<T> b) => Add(b, a);
+    public static RootClass<double> Add<LocalT>(RootClass<double> a, RootClass<LocalT> b) where LocalT : INumber<LocalT> => Add(b, a);
 
-    public static RootClass<double> Subtract(RootClass<T> a, RootClass<double> b)
+    public static RootClass<double> Subtract<LocalT>(RootClass<LocalT> a, RootClass<double> b) where LocalT : INumber<LocalT>
     {
-        if (a._Size != b._Size)
+        if (a.size != b.size)
             throw new InvalidOperationException("Matrices must have the same dimensions for subtraction.");
 
         return Add_Subtract_for_diff(a, b, false);
     }
 
-    public static RootClass<double> Subtract(RootClass<double> a, RootClass<T> b) => Subtract(b, a);
+    public static RootClass<double> Subtract<LocalT>(RootClass<double> a, RootClass<LocalT> b) where LocalT : INumber<LocalT> => Subtract(b, a);
 
     public RootClass<T> copy() => new((T[,])_matrix.Clone());
 
     protected T[] GetRow(int r)
     {
-        T[] result = new T[_Size.Columns];
-        for (int j = 0; j < _Size.Columns; j++)
+        T[] result = new T[size.Columns];
+        for (int j = 0; j < size.Columns; j++)
             result[j] = _matrix[r, j];
 
         return result;
@@ -145,8 +148,8 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected T[] GetColumn(int c)
     {
-        T[] result = new T[_Size.Rows];
-        for (int i = 0; i < _Size.Rows; i++)
+        T[] result = new T[size.Rows];
+        for (int i = 0; i < size.Rows; i++)
             result[i] = _matrix[i, c];
         return result;
     }
@@ -156,9 +159,9 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
     public string ToString(string split = "\t", string LineEnd = "\n")
     {
         System.Text.StringBuilder sb = new();
-        for (int i = 0; i < _Size.Rows; i++)
+        for (int i = 0; i < size.Rows; i++)
         {
-            for (int j = 0; j < _Size.Columns; j++)
+            for (int j = 0; j < size.Columns; j++)
                 sb.Append(_matrix[i, j].ToString() + split);
             sb.Append(LineEnd);
         }
@@ -173,119 +176,101 @@ public class RootClass<T> where T : System.Numerics.INumber<T>
 
     protected Vector<T> ToOneD()
     {
-        Vector<T> vec = new(_Size.Rows * _Size.Columns);
-        for (int i = 0; i < _Size.Rows; i++)
-            for (int j = 0; j < _Size.Columns; j++)
-                vec[i * _Size.Columns + j] = this[i, j];
+        Vector<T> vec = new(size.Rows * size.Columns);
+        for (int i = 0; i < size.Rows; i++)
+            for (int j = 0; j < size.Columns; j++)
+                vec[i * size.Columns + j] = this[i, j];
         return vec;
     }
 
-
-    private static Vector<T>[] ToZero(Vector<T>[] vectors, int x, int y, bool is_reverse = false)
+    private static List<Vector<LocalT>> ToZero<LocalT>(List<Vector<LocalT>> vectors, int x, int y) where LocalT : INumber<LocalT>
     {
-        if (vectors[y][x] == T.Zero)
+        if (LocalT.IsZero(vectors[y][x]))
             return vectors;
 
-        Vector<T> currnt = vectors[y];
-        int zero_count = currnt.Count(t => t == T.Zero);
+        Vector<LocalT> current = vectors[y];
+        int zero_count = current.Count(LocalT.IsZero);
 
-        if (!is_reverse)
-            for (int i = y - 1; i >= 0; i--)
-            {
-                Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
-
-                if (temp.Count(t => t == T.Zero) >= zero_count)
-                {
-                    vectors[y] = temp;
-                    return vectors;
-                }
-            }
-
-        else
+        for (int i = y - 1; i >= 0; i--)
         {
-            for (int i = y; i < vectors.Length; i++)
-            {
-                Vector<T> temp = currnt - vectors[i] * (currnt[x] / vectors[i][x]);
+            Vector<LocalT> temp = current - vectors[i] * (current[x] / vectors[i][x]);
 
-                if (temp.Count(t => t == T.Zero) >= zero_count)
-                {
-                    vectors[y] = temp;
-                    return vectors;
-                }
+            if (temp.Count(LocalT.IsZero) >= zero_count)
+            {
+                vectors[y] = temp;
+                return vectors;
             }
         }
 
         return vectors;
     }
 
-    public static T GetGcd(Vector<T> numbers, double epsilon = 1e-10)
+    public static LocalT GetGcd<LocalT>(Vector<LocalT> numbers, double epsilon = 1e-10) where LocalT : INumber<LocalT>
     {
-        static T CalculateGcd(T a, T b, T epsilon)
+        static LocalT CalculateGcd(LocalT a, LocalT b, LocalT epsilon)
         {
-            a = T.Abs(a);
-            b = T.Abs(b);
+            a = LocalT.Abs(a);
+            b = LocalT.Abs(b);
 
             while (b > epsilon)
                 (a, b) = (b, a % b);
             return a;
         }
 
-        if (numbers is null || numbers.size == 0) return T.Zero;
+        if (numbers is null || numbers.size == 0) return LocalT.Zero;
 
-        T ep = T.CreateChecked(epsilon);
-        T sgn = numbers.All(t => T.IsNegative(t) || T.IsZero(t)) ? -T.One : T.One;
+        LocalT ep = LocalT.CreateChecked(epsilon);
+        LocalT sgn = numbers.All(t => LocalT.IsNegative(t) || LocalT.IsZero(t)) ? -LocalT.One : LocalT.One;
 
         return numbers.Aggregate((gcd, next) => CalculateGcd(gcd, next, ep)) * sgn;
     }
 
-    protected static Vector<T>[] BaseOfBase(RootClass<T>[] objects)
+    protected static IEnumerable<Vector<LocalT>> BaseOfBase<LocalT>(RootClass<LocalT>[] objects) where LocalT : INumber<LocalT>
     {
-        if (objects.Length == 0 || objects.Any(b => b._Size != objects[0]._Size))
+        if (objects.Length == 0 || objects.Any(b => b.size != objects[0].size))
             throw new InvalidOperationException("These objects must have the same dimensions to form a basis.");
 
-        if (objects[0]._Size.Columns * objects[0]._Size.Rows == 1)
-            return [new Vector<T>(T.One)];
+        List<Vector<LocalT>> vectors = objects.Select(obj => obj.ToOneD()).Where(v => !v.All(LocalT.IsZero)).ToList();
 
-        Vector<T>[] vectors = objects.Select(obj => obj.ToOneD()).ToArray();
+        int size = objects[0].size.Rows * objects[0].size.Columns;
 
-        if (objects.Length == 1)
+        if(size == 0)
+            return [];
+
+        else if (size == 1)
+            return [[LocalT.One]];
+
+        else if (vectors.Count == 0 || vectors.Count == 1)
             return vectors;
 
-        vectors = vectors.Where(v => v.Any(t => t != T.Zero)).ToArray();
-        if (vectors.Length == 0)
-            return [new Vector<T>(objects[0]._Size.Rows * objects[0]._Size.Columns)];
-
-
-        int stop = Math.Max(objects[0]._Size.Columns, objects[0]._Size.Rows) - 1;
-
-        for (int x = 0; x < vectors[0].size - 1; x++)
+        else for (int t = 0; t < 2; t++)
         {
-            for (int y = 0; y < objects.Length - x; y++)
+            for (int x = 0; x < size; x++)
             {
-                vectors = ToZero(vectors, x, vectors.Length - 1 - y)
-                    .Where(v => v.Any(t => t != T.Zero)).ToArray();
+                for (int y = 0; y < vectors.Count - x; y++)
+                {
+                    int targetIndex = vectors.Count - 1 - y;
+                    vectors = ToZero(vectors, x, targetIndex);
+
+                    if (vectors[targetIndex].All(LocalT.IsZero))
+                    {
+                        if (vectors.Count == 1)
+                            return [];
+
+                        vectors.RemoveAt(targetIndex);
+                    }
+                }
             }
+            vectors.Reverse();
         }
 
-
-        //for (int x = 0; x < vectors[0].size - 1; x++)
-        //{
-        //    Console.WriteLine(vectors.First());
-        //    vectors = ToZero(vectors, x, 0, true)
-        //            .Where(v => v.Any(t => t != T.Zero)).ToArray();
-        //}
-
-        //Console.WriteLine();
-
-        for (int i = 0; i < vectors.Length; i++)
+        for (int i = 0; i < vectors.Count; i++)
         {
-            T gcd = GetGcd(vectors[i]);
-            for (int j = 0; j < vectors[i].size; j++)
-                if (!T.IsZero(vectors[i][j]))
+            LocalT gcd = GetGcd(vectors[i]);
+            for (int j = 0; j < size; j++)
+                if (!LocalT.IsZero(vectors[i][j]))
                     vectors[i][j] /= gcd;
         }
-
-        vectors = Enumerable.OrderBy(vectors, v => v.Count(t => T.IsZero(t))).ToArray();
 
         return vectors;
     }

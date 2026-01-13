@@ -13,7 +13,7 @@ internal static class VectorBuilder
 public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 {
     public T[] source => GetColumn(0);
-    public int size => _Size.Rows;
+    public int size => base.size.Rows;
 
     public Vector(int size) : base(size, 1) { }
 
@@ -41,13 +41,13 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public static Vector<T> operator *(Matrix<T> m, Vector<T> v)
     {
-        if (m._Size.Columns != v._Size.Rows)
+        if (m.size.Columns != v.size)
             throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
 
-        Vector<T> result = new(v._Size.Rows);
+        Vector<T> result = new(v.size);
 
-        for (int i = 0; i < m._Size.Rows; i++)
-            for (int k = 0; k < m._Size.Columns; k++)
+        for (int i = 0; i < m.size.Rows; i++)
+            for (int k = 0; k < m.size.Columns; k++)
                 result[i] += m[i, k] * v[k];
 
         return result;
@@ -55,16 +55,16 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public static Vector<T> operator /(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
     public static Vector<T> operator *(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix * scalar);
-    public static Vector<T> operator +(Vector<T> a, Vector<T> b) => new((RootClass<T>)a + (RootClass<T>)b);
-    public static Vector<T> operator -(Vector<T> a, Vector<T> b) => new((RootClass<T>)a - (RootClass<T>)b);
+    public static Vector<T> operator +(Vector<T> a, Vector<T> b) => new(a + (RootClass<T>)b);
+    public static Vector<T> operator -(Vector<T> a, Vector<T> b) => new(a - (RootClass<T>)b);
 
 
     public static Vector<T> ToVectorOfOne(Vector<T> v)
     {
-        Vector<T> result = new(v._Size);
+        Vector<T> result = new(v.size);
 
         T divideBy = v.Norm();
-        for (int i = 0; i < v._Size.Rows; i++)
+        for (int i = 0; i < v.size; i++)
             result[i] = v[i] / divideBy;
 
         return result;
@@ -75,7 +75,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
     {
         T sum = T.Zero;
 
-        for (int i = 0; i < v._Size.Rows; i++)
+        for (int i = 0; i < v.size; i++)
             sum += v[i] * v[i];
 
         return T.CreateChecked(Math.Sqrt(double.CreateChecked(sum)));
@@ -83,29 +83,20 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
     public T Norm() => Norm(this);
 
 
-    public Matrix<T> AsMatrix() => new((T[,])_matrix.Clone());
-
-    public virtual IEnumerator<T> GetEnumerator()
-    {
-        for (int i = 0; i < _Size.Rows; i++)
-            yield return this[i];
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public string ToString(string split = ", ", string start = "[", string end = "]")
     {
         System.Text.StringBuilder sb = new(start);
-        for (int i = 0; i < _Size.Rows; i++)
-            sb.Append(this[i] + (i < _Size.Rows - 1 ? split : end));
+        for (int i = 0; i < size; i++)
+            sb.Append(this[i] + (i < size - 1 ? split : end));
         return sb.ToString();
     }
 
     public override string ToString() => ToString();
 
-    public Matrix<T> FromeOneD(ObjectSize size)
+    public Matrix<T> FromOneD(ObjectSize size)
     {
-        Matrix<T> matrix = new Matrix<T>(size);
+        Matrix<T> matrix = new(size);
         for (int i = 0; i < size.Rows; i++)
             for (int j = 0; j < size.Columns; j++)
                 matrix[i, j] = this[i * size.Columns + j];
@@ -113,6 +104,21 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return matrix;
     }
 
-    public static Vector<T>[] Base(Vector<T>[] vectors) => BaseOfBase(vectors);
+    public Vector<T> reverse()
+    {
+        Vector<T> result = new(size);
+        for (int i = 0; i < size; i++)
+            result[i] = this[size - 1 - i];
+        return result;
+    }
 
+    public static Vector<T>[] Base(Vector<T>[] vectors) => BaseOfBase(vectors).ToArray();
+
+    public virtual IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i < size; i++)
+            yield return this[i];
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
