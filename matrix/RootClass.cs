@@ -8,26 +8,26 @@ public class RootClass<T> where T : INumber<T>
 {
     public ObjectSize size { get; init; }
 
-    protected T[,] _matrix;
+    protected T[,] matrix;
 
-    public T[,] _source => (T[,])_matrix.Clone();
+    public T[,] source => (T[,])matrix.Clone();
 
     private T this[int r, int c]
     {
-        get => _matrix[r, c];
-        set => _matrix[r, c] = value;
+        get => matrix[r, c];
+        set => matrix[r, c] = value;
     }
 
     protected RootClass(int rows, int columns)
     {
-        _matrix = new T[rows, columns];
+        matrix = new T[rows, columns];
         size = new ObjectSize(rows, columns);
     }
 
     protected RootClass(ObjectSize size) : this(size.Rows, size.Columns) { }
 
     protected RootClass(T[,] data) : this(data.GetLength(0), data.GetLength(1))
-        => _matrix = (T[,])data.Clone();
+        => matrix = (T[,])data.Clone();
 
     public static bool operator ==(RootClass<T> a, RootClass<T> b)
     {
@@ -135,13 +135,13 @@ public class RootClass<T> where T : INumber<T>
 
     public static RootClass<double> Subtract<LocalT>(RootClass<double> a, RootClass<LocalT> b) where LocalT : INumber<LocalT> => Subtract(b, a);
 
-    public RootClass<T> copy() => new((T[,])_matrix.Clone());
+    public RootClass<T> copy() => new((T[,])matrix.Clone());
 
     protected T[] GetRow(int r)
     {
         T[] result = new T[size.Columns];
         for (int j = 0; j < size.Columns; j++)
-            result[j] = _matrix[r, j];
+            result[j] = matrix[r, j];
 
         return result;
     }
@@ -150,7 +150,7 @@ public class RootClass<T> where T : INumber<T>
     {
         T[] result = new T[size.Rows];
         for (int i = 0; i < size.Rows; i++)
-            result[i] = _matrix[i, c];
+            result[i] = matrix[i, c];
         return result;
     }
 
@@ -162,7 +162,7 @@ public class RootClass<T> where T : INumber<T>
         for (int i = 0; i < size.Rows; i++)
         {
             for (int j = 0; j < size.Columns; j++)
-                sb.Append(_matrix[i, j].ToString() + split);
+                sb.Append(matrix[i, j].ToString() + split);
             sb.Append(LineEnd);
         }
 
@@ -172,7 +172,7 @@ public class RootClass<T> where T : INumber<T>
     public override bool Equals(object? obj)
         => obj is RootClass<T> other && this == other;
 
-    public override int GetHashCode() => _matrix.GetHashCode();
+    public override int GetHashCode() => matrix.GetHashCode();
 
     protected Vector<T> ToOneD()
     {
@@ -227,12 +227,12 @@ public class RootClass<T> where T : INumber<T>
 
     protected static IEnumerable<Vector<LocalT>> BaseOfBase<LocalT>(RootClass<LocalT>[] objects) where LocalT : INumber<LocalT>
     {
-        if (objects.Length == 0 || objects.Any(b => b.size != objects[0].size))
+        if (objects.Length == 0 || objects.Any(b => b.size != objects.First().size))
             throw new InvalidOperationException("These objects must have the same dimensions to form a basis.");
 
         List<Vector<LocalT>> vectors = objects.Select(obj => obj.ToOneD()).Where(v => !v.All(LocalT.IsZero)).ToList();
 
-        int size = objects[0].size.Rows * objects[0].size.Columns;
+        int size = objects.First().size.Rows * objects.First().size.Columns;
 
         if(size == 0)
             return [];
@@ -274,4 +274,9 @@ public class RootClass<T> where T : INumber<T>
 
         return vectors;
     }
+}
+
+public class Root
+{
+
 }

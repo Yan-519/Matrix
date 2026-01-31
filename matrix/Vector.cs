@@ -12,8 +12,8 @@ internal static class VectorBuilder
 [CollectionBuilder(typeof(VectorBuilder), "Create")]
 public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 {
-    public T[] source => GetColumn(0);
-    public int size => base.size.Rows;
+    public new T[] source => GetColumn(0);
+    public new int size => base.size.Rows;
 
     public Vector(int size) : base(size, 1) { }
 
@@ -31,12 +31,12 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public Vector(ReadOnlySpan<T> data) : this(data.ToArray()) { }
 
-    private Vector(RootClass<T> root) : base(root._source) { }
+    private Vector(RootClass<T> root) : base(root.source) { }
 
     public T this[int r]
     {
-        get => _matrix[r, 0];
-        set => _matrix[r, 0] = value;
+        get => matrix[r, 0];
+        set => matrix[r, 0] = value;
     }
 
     public static Vector<T> operator *(Matrix<T> m, Vector<T> v)
@@ -81,7 +81,6 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return T.CreateChecked(Math.Sqrt(double.CreateChecked(sum)));
     }
     public T Norm() => Norm(this);
-
 
 
     public string ToString(string split = ", ", string start = "[", string end = "]")

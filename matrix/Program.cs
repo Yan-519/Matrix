@@ -15,7 +15,7 @@ internal class Program
 
         Vector<BigInteger> start = new(0, 1);
 
-        return ((f ^ (n - 1)) * start)[0];
+        return ((f ^ (n - 1)) * start).First();
     }
 
     private static BigInteger standart_fib(int n)
@@ -78,6 +78,6 @@ internal class Program
         Vector<double>[] vectors = [[1, 2, 3], [7324, 87153, 813], [287, 7, 0]];
 
         foreach(Vector<double> vector in Vector<double>.Base(vectors))
-            Console.WriteLine(vector.ToString("\t"));
+            Console.WriteLine(vector);
     }
 }

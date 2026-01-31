@@ -30,11 +30,11 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public T this[int r, int c]
     {
-        get => _matrix[r, c];
-        set => _matrix[r, c] = value;
+        get => matrix[r, c];
+        set => matrix[r, c] = value;
     }
 
-    public T[,] source => (T[,])_matrix.Clone();
+    public new T[,] source => base.source;
 
     public bool IsSquare { get; init; }
 
@@ -44,15 +44,15 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public Matrix(params T[][] matrix) : this(matrix.Length, matrix.Min(array => array.Length))
     {
-        for (int i = 0; i < _matrix.GetLength(0); i++)
-            for (int j = 0; j < _matrix.GetLength(1); j++)
-                _matrix[i, j] = matrix[i][j];
+        for (int i = 0; i < base.matrix.GetLength(0); i++)
+            for (int j = 0; j < base.matrix.GetLength(1); j++)
+                base.matrix[i, j] = matrix[i][j];
     }
 
     public Matrix(int rows, int columns) : base(rows, columns) => IsSquare = rows == columns;
 
     private Matrix(RootClass<T> root) : this(root.size)
-        => _matrix = ((Matrix<T>)root).source;
+        => matrix = root.source;
 
     public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b)
     {
@@ -96,7 +96,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         T trace = T.Zero;
         for (int i = 0; i < size.Rows; i++)
-            trace += _matrix[i, i];
+            trace += matrix[i, i];
 
         return trace;
     }
@@ -107,7 +107,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         for (int i = 0; i < size.Rows; i++)
             for (int j = 0; j < size.Columns; j++)
-                transposed[j, i] = _matrix[i, j];
+                transposed[j, i] = matrix[i, j];
 
         return transposed;
     }
@@ -149,8 +149,8 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return determinant;
     }
-    public static LocalT determinant<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT> => det(matrix._matrix);
-    public T determinant() => det(_matrix);
+    public static LocalT determinant<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT> => det(matrix.matrix);
+    public T determinant() => det(matrix);
 
     public static Matrix<LocalT> adj<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT>
     {
@@ -158,7 +158,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         for (int row = 0; row < matrix.size.Rows; row++)
             for (int col = 0; col < matrix.size.Columns; col++)
-                adjuvate[col, row] = LocalT.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix._matrix, row, col));
+                adjuvate[col, row] = LocalT.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix.matrix, row, col));
 
         return adjuvate;
     }
@@ -166,7 +166,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public static Matrix<LocalT>? invert<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT>
     {
-        LocalT determinant = det(matrix._matrix);
+        LocalT determinant = det(matrix.matrix);
         if (determinant == LocalT.Zero)
             return null;
 
@@ -201,8 +201,8 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public static Matrix<double> Multiply<LocalT>(Matrix<double> a, Matrix<LocalT> b) where LocalT : INumber<LocalT> => Multiply(b, a);
 
-    public Vector<T> ToVector() => new(R[0]);
+    public Vector<T> ToVector() => new(R.First());
 
     public static Matrix<LocalT>[] Base<LocalT>(Matrix<LocalT>[] matrices) where LocalT : INumber<LocalT>
-        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices[0].size)).ToArray();
+        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToArray();
 }
