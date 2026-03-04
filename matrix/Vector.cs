@@ -111,7 +111,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return result;
     }
 
-    public static Vector<T>[] Base(Vector<T>[] vectors) => BaseOfBase(vectors).ToArray();
+    public static List<Vector<T>> Base(Vector<T>[] vectors) => BaseOfBase(vectors);
 
     public virtual IEnumerator<T> GetEnumerator()
     {

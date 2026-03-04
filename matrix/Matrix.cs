@@ -203,6 +203,6 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public Vector<T> ToVector() => new(R.First());
 
-    public static Matrix<LocalT>[] Base<LocalT>(Matrix<LocalT>[] matrices) where LocalT : INumber<LocalT>
-        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToArray();
+    public static List<Matrix<LocalT>> Base<LocalT>(Matrix<LocalT>[] matrices) where LocalT : INumber<LocalT>
+        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToList();
 }

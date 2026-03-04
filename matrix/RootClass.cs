@@ -225,7 +225,7 @@ public class RootClass<T> where T : INumber<T>
         return numbers.Aggregate((gcd, next) => CalculateGcd(gcd, next, ep)) * sgn;
     }
 
-    protected static IEnumerable<Vector<LocalT>> BaseOfBase<LocalT>(RootClass<LocalT>[] objects) where LocalT : INumber<LocalT>
+    protected static List<Vector<LocalT>> BaseOfBase<LocalT>(RootClass<LocalT>[] objects) where LocalT : INumber<LocalT>
     {
         if (objects.Length == 0 || objects.Any(b => b.size != objects.First().size))
             throw new InvalidOperationException("These objects must have the same dimensions to form a basis.");
@@ -234,35 +234,33 @@ public class RootClass<T> where T : INumber<T>
 
         int size = objects.First().size.Rows * objects.First().size.Columns;
 
-        if(size == 0)
+        if (size == 0 || vectors.Count == 0)
             return [];
 
         else if (size == 1)
             return [[LocalT.One]];
 
-        else if (vectors.Count == 0 || vectors.Count == 1)
-            return vectors;
-
-        else for (int t = 0; t < 2; t++)
-        {
-            for (int x = 0; x < size; x++)
+        else if (vectors.Count != 1)
+            for (int t = 0; t < 2; t++)
             {
-                for (int y = 0; y < vectors.Count - x; y++)
+                for (int x = 0; x < size; x++)
                 {
-                    int targetIndex = vectors.Count - 1 - y;
-                    vectors = ToZero(vectors, x, targetIndex);
-
-                    if (vectors[targetIndex].All(LocalT.IsZero))
+                    for (int y = 0; y < vectors.Count - x; y++)
                     {
-                        if (vectors.Count == 1)
-                            return [];
+                        int targetIndex = vectors.Count - 1 - y;
+                        vectors = ToZero(vectors, x, targetIndex);
 
-                        vectors.RemoveAt(targetIndex);
+                        if (vectors[targetIndex].All(LocalT.IsZero))
+                        {
+                            if (vectors.Count == 1)
+                                return [];
+
+                            vectors.RemoveAt(targetIndex);
+                        }
                     }
                 }
+                vectors.Reverse();
             }
-            vectors.Reverse();
-        }
 
         for (int i = 0; i < vectors.Count; i++)
         {
@@ -274,9 +272,4 @@ public class RootClass<T> where T : INumber<T>
 
         return vectors;
     }
-}
-
-public class Root
-{
-
 }

@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Numerics;
 
 namespace matrix;
 
@@ -63,6 +63,25 @@ internal class Program
         return res;
     }
 
+    private static BigInteger[] standart_fib_lst(int n)
+    {
+        if (n <= 0)
+            throw new("n must be greater or equal to 0");
+        else if (n == 1)
+            return [0];
+        else if (n == 2)
+            return [0, 1];
+
+        BigInteger[] res = new BigInteger[n];
+        res[0] = 0;
+        res[1] = 1;
+
+        for (int i = 2; i < n; i++)
+            res[i] = res[i - 1] + res[i - 2];
+
+        return res;
+    }
+
 
     private static Tuple<long, Out> test_func<In, Out>(Func<In, Out> func, In n)
     {
@@ -73,11 +92,24 @@ internal class Program
     }
 
 
-    static void Main()
+    private static void Main()
     {
-        Vector<double>[] vectors = [[1, 2, 3], [7324, 87153, 813], [287, 7, 0]];
+        //for(int i = 1; i < 7; i++)
+        //{
+        //    int n = (int)Math.Pow(10, i);
 
-        foreach(Vector<double> vector in Vector<double>.Base(vectors))
-            Console.WriteLine(vector);
+        //    Console.WriteLine($"pow: {i}");
+        //    Console.WriteLine(test_func(standart_fib_lst, n).Item1);
+        //    Console.WriteLine(test_func(fib_lst, n).Item1);
+        //    Console.WriteLine();
+        //}
+
+        foreach(BigInteger n in standart_fib_lst(10000))
+            Console.WriteLine(n);
+
+        //Vector<double>[] vectors = [[1, 2, 3], [7324, 87153, 813], [287, 7, 0]];
+
+        //foreach(Vector<double> vector in Vector<double>.Base(vectors))
+        //    Console.WriteLine(vector);
     }
 }
