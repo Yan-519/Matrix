@@ -54,20 +54,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
     private Matrix(RootClass<T> root) : this(root.size)
         => matrix = root.source;
 
-    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b)
-    {
-        if (a.size.Columns != b.size.Rows)
-            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
-
-        Matrix<T> result = new(a.size.Rows, b.size.Columns);
-
-        for (int i = 0; i < a.size.Rows; i++)
-            for (int j = 0; j < b.size.Columns; j++)
-                for (int k = 0; k < a.size.Columns; k++)
-                    result[i, j] += a[i, k] * b[k, j];
-
-        return result;
-    }
+    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => Multiply(a, b);
 
     public static Matrix<T> operator ^(Matrix<T> a, int power)
     {
@@ -86,16 +73,15 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
     }
 
     public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
-    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => new(a + (RootClass<T>)b);
-    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => new(a - (RootClass<T>)b);
+    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Add(a,b);
+    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Subtract(a, b);
 
     public T trace()
     {
-        if (!IsSquare)
-            throw new InvalidOperationException("Trace is only defined for square matrices.");
+        int lim = Math.Min(size.Rows, size.Columns);
 
         T trace = T.Zero;
-        for (int i = 0; i < size.Rows; i++)
+        for (int i = 0; i < lim; i++)
             trace += matrix[i, i];
 
         return trace;
@@ -112,9 +98,9 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return transposed;
     }
 
-    private static LocalT[,] get_sub<LocalT>(LocalT[,] matrix, int row, int col) where LocalT : INumber<LocalT>
+    private static T[,] get_sub(T[,] matrix, int row, int col)
     {
-        LocalT[,] sub_matrix = new LocalT[matrix.GetLength(0) - 1, matrix.GetLength(1) - 1];
+        T[,] sub_matrix = new T[matrix.GetLength(0) - 1, matrix.GetLength(1) - 1];
         int sub_row = 0, sub_col = 0;
 
         for (int i = 0; i < matrix.GetLength(0); i++)
@@ -134,7 +120,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return sub_matrix;
     }
 
-    private static LocalT det<LocalT>(LocalT[,] matrix) where LocalT : INumber<LocalT>
+    private static T det(T[,] matrix)
     {
         if (matrix.GetLength(0) != matrix.GetLength(1))
             throw new InvalidOperationException("Determinant is only defined for square matrices.");
@@ -142,32 +128,33 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         if (matrix.GetLength(0) == 2 && matrix.GetLength(1) == 2)
             return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0];
 
-        LocalT determinant = LocalT.Zero;
+        T determinant = T.Zero;
 
         for (int col = 0; col < matrix.GetLength(1); col++)
-            determinant += LocalT.CreateChecked(Math.Pow(-1, col)) * matrix[0, col] * det(get_sub(matrix, 0, col));
+            if(matrix[0, col] != T.Zero)
+                determinant += T.CreateChecked(Math.Pow(-1, col)) * matrix[0, col] * det(get_sub(matrix, 0, col));
 
         return determinant;
     }
-    public static LocalT determinant<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT> => det(matrix.matrix);
+    public static T determinant(Matrix<T> matrix) => det(matrix.matrix);
     public T determinant() => det(matrix);
 
-    public static Matrix<LocalT> adj<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT>
+    public static Matrix<T> adj(Matrix<T> matrix)
     {
-        Matrix<LocalT> adjuvate = new(matrix.size);
+        Matrix<T> adjuvate = new(matrix.size);
 
         for (int row = 0; row < matrix.size.Rows; row++)
             for (int col = 0; col < matrix.size.Columns; col++)
-                adjuvate[col, row] = LocalT.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix.matrix, row, col));
+                adjuvate[col, row] = T.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix.matrix, row, col));
 
         return adjuvate;
     }
     public Matrix<T> adj() => adj(this);
 
-    public static Matrix<LocalT>? invert<LocalT>(Matrix<LocalT> matrix) where LocalT : INumber<LocalT>
+    public static Matrix<T>? invert(Matrix<T> matrix)
     {
-        LocalT determinant = det(matrix.matrix);
-        if (determinant == LocalT.Zero)
+        T determinant = det(matrix.matrix);
+        if (determinant == T.Zero)
             return null;
 
         return adj(matrix) / determinant;
@@ -184,25 +171,23 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return identity;
     }
 
-    public static Matrix<double> Multiply<LocalT>(Matrix<LocalT> a, Matrix<double> b) where LocalT : INumber<LocalT>
+    public static Matrix<T> Multiply<T1, T2>(Matrix<T1> a, Matrix<T2> b) where T1 : INumber<T1> where T2 : INumber<T2>
     {
         if (a.size.Columns != b.size.Rows)
             throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
 
-        Matrix<double> result = new(a.size.Rows, b.size.Columns);
+        Matrix<T> result = new(a.size.Rows, b.size.Columns);
 
         for (int i = 0; i < a.size.Rows; i++)
             for (int j = 0; j < b.size.Columns; j++)
                 for (int k = 0; k < a.size.Columns; k++)
-                    result[i, j] += double.CreateChecked(a[i, k]) * b[k, j];
+                    result[i, j] += T.CreateChecked(a[i, k]) * T.CreateChecked(b[k, j]);
 
         return result;
     }
 
-    public static Matrix<double> Multiply<LocalT>(Matrix<double> a, Matrix<LocalT> b) where LocalT : INumber<LocalT> => Multiply(b, a);
-
     public Vector<T> ToVector() => new(R.First());
 
-    public static List<Matrix<LocalT>> Base<LocalT>(Matrix<LocalT>[] matrices) where LocalT : INumber<LocalT>
+    public static List<Matrix<T>> Base(Matrix<T>[] matrices)
         => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToList();
 }

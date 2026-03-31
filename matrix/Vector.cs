@@ -55,8 +55,8 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
     public static Vector<T> operator /(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
     public static Vector<T> operator *(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix * scalar);
-    public static Vector<T> operator +(Vector<T> a, Vector<T> b) => new(a + (RootClass<T>)b);
-    public static Vector<T> operator -(Vector<T> a, Vector<T> b) => new(a - (RootClass<T>)b);
+    public static Vector<T> operator +(Vector<T> a, Vector<T> b) => (Vector<T>)Add(a, b);
+    public static Vector<T> operator -(Vector<T> a, Vector<T> b) => (Vector<T>)Subtract(a, b);
 
 
     public static Vector<T> ToVectorOfOne(Vector<T> v)
