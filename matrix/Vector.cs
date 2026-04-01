@@ -69,7 +69,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
         return result;
     }
-    public Vector<T> ToVectorOfOne() => ToVectorOfOne(this);
+    public void ToVectorOfOne() => matrix = ToVectorOfOne(this).matrix;
 
     public static T Norm(Vector<T> v)
     {
@@ -81,7 +81,6 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return T.CreateChecked(Math.Sqrt(double.CreateChecked(sum)));
     }
     public T Norm() => Norm(this);
-
 
     public string ToString(string split = ", ", string start = "[", string end = "]")
     {
@@ -103,13 +102,15 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return matrix;
     }
 
-    public Vector<T> reverse()
+    public static Vector<T> Reverse(Vector<T> v)
     {
-        Vector<T> result = new(size);
-        for (int i = 0; i < size; i++)
-            result[i] = this[size - 1 - i];
+        Vector<T> result = new(v.size);
+        for (int i = 0; i < v.size; i++)
+            result[i] = v[v.size - 1 - i];
         return result;
     }
+
+    public void Reverse() => matrix = Reverse(this).matrix;
 
     public static List<Vector<T>> Base(Vector<T>[] vectors) => BaseOfBase(vectors);
 

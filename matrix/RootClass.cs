@@ -68,6 +68,8 @@ public class RootClass<T> where T : INumber<T>
         return result;
     }
 
+    public void Multiply<TOther>(TOther scalar) where TOther : INumber<TOther>
+        => Multiply(this, scalar);
 
     protected static RootClass<T> Add_Subtract_for_diff<T1, T2>(RootClass<T1> a, RootClass<T2> b, T sign) where T1 : INumber<T1> where T2 : INumber<T2>
     {
@@ -88,6 +90,12 @@ public class RootClass<T> where T : INumber<T>
 
     public static RootClass<T> Subtract<T1, T2>(RootClass<T1> a, RootClass<T2> b) where T1 : INumber<T1> where T2 : INumber<T2>
         => Add_Subtract_for_diff(a, b, -T.One);
+
+    public void Add<TOther>(RootClass<TOther> other) where TOther : INumber<TOther>
+        => Add(this, other);
+
+    public void Subtract<TOther>(RootClass<TOther> other) where TOther : INumber<TOther>
+        => Subtract(this, other);
 
     public static bool AreEqual<T1, T2>(RootClass<T1> a, RootClass<T2> b, double epsilon = 1e-10)
         where T1 : INumber<T1> where T2 : INumber<T2>
@@ -165,27 +173,6 @@ public class RootClass<T> where T : INumber<T>
         return vec;
     }
 
-    private static List<Vector<T>> ToZero(List<Vector<T>> vectors, int x, int y)
-    {
-        if (T.IsZero(vectors[y][x]))
-            return vectors;
-
-        Vector<T> current = vectors[y];
-        int zero_count = current.Count(T.IsZero);
-
-        for (int i = y - 1; i >= 0; i--)
-        {
-            Vector<T> temp = current - vectors[i] * (current[x] / vectors[i][x]);
-
-            if (temp.Count(T.IsZero) >= zero_count)
-            {
-                vectors[y] = temp;
-                return vectors;
-            }
-        }
-
-        return vectors;
-    }
 
     private static T GetGcd(Vector<T> numbers, double epsilon = 1e-10)
     {
@@ -209,6 +196,28 @@ public class RootClass<T> where T : INumber<T>
 
     protected static List<Vector<T>> BaseOfBase(RootClass<T>[] objects)
     {
+        static List<Vector<T>> ToZero(List<Vector<T>> vectors, int x, int y)
+        {
+            if (T.IsZero(vectors[y][x]))
+                return vectors;
+
+            Vector<T> current = vectors[y];
+            int zero_count = current.Count(T.IsZero);
+
+            for (int i = y - 1; i >= 0; i--)
+            {
+                Vector<T> temp = current - vectors[i] * (current[x] / vectors[i][x]);
+
+                if (temp.Count(T.IsZero) >= zero_count)
+                {
+                    vectors[y] = temp;
+                    return vectors;
+                }
+            }
+
+            return vectors;
+        }
+
         if (objects.Length == 0 || objects.Any(b => b.size != objects.First().size))
             throw new InvalidOperationException("These objects must have the same dimensions to form a basis.");
 

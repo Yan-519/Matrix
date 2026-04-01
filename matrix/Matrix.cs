@@ -44,9 +44,9 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public Matrix(params T[][] matrix) : this(matrix.Length, matrix.Min(array => array.Length))
     {
-        for (int i = 0; i < base.matrix.GetLength(0); i++)
-            for (int j = 0; j < base.matrix.GetLength(1); j++)
-                base.matrix[i, j] = matrix[i][j];
+        for (int i = 0; i < size.Rows; i++)
+            for (int j = 0; j < size.Columns; j++)
+                this.matrix[i, j] = matrix[i][j];
     }
 
     public Matrix(int rows, int columns) : base(rows, columns) => IsSquare = rows == columns;
@@ -73,12 +73,12 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
     }
 
     public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
-    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Add(a,b);
+    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Add(a, b);
     public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Subtract(a, b);
 
-    public T trace()
+    public static T Trace(Matrix<T> matrix)
     {
-        int lim = Math.Min(size.Rows, size.Columns);
+        int lim = Math.Min(matrix.size.Rows, matrix.size.Columns);
 
         T trace = T.Zero;
         for (int i = 0; i < lim; i++)
@@ -87,16 +87,20 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return trace;
     }
 
-    public Matrix<T> transpose()
+    public T Trace() => Trace(this);
+
+    public static Matrix<T> Transpose(Matrix<T> matrix)
     {
-        Matrix<T> transposed = new(size.Columns, size.Rows);
+        T[,] temp = new T[matrix.size.Columns, matrix.size.Rows];
 
-        for (int i = 0; i < size.Rows; i++)
-            for (int j = 0; j < size.Columns; j++)
-                transposed[j, i] = matrix[i, j];
+        for (int i = 0; i < matrix.size.Rows; i++)
+            for (int j = 0; j < matrix.size.Columns; j++)
+                temp[j, i] = matrix.matrix[i, j];
 
-        return transposed;
+        return new(temp);
     }
+
+    public void Transpose() => matrix = Transpose(this).matrix;
 
     private static T[,] get_sub(T[,] matrix, int row, int col)
     {
@@ -119,7 +123,6 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return sub_matrix;
     }
-
     private static T det(T[,] matrix)
     {
         if (matrix.GetLength(0) != matrix.GetLength(1))
@@ -131,35 +134,47 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         T determinant = T.Zero;
 
         for (int col = 0; col < matrix.GetLength(1); col++)
-            if(matrix[0, col] != T.Zero)
+            if (matrix[0, col] != T.Zero)
                 determinant += T.CreateChecked(Math.Pow(-1, col)) * matrix[0, col] * det(get_sub(matrix, 0, col));
 
         return determinant;
     }
-    public static T determinant(Matrix<T> matrix) => det(matrix.matrix);
-    public T determinant() => det(matrix);
+    public static T Determinant(Matrix<T> matrix) => det(matrix.matrix);
+    public T Determinant() => Determinant(this);
 
-    public static Matrix<T> adj(Matrix<T> matrix)
+    public static Matrix<T> Adjuvate(Matrix<T> matrix)
     {
         Matrix<T> adjuvate = new(matrix.size);
 
+        Func<int, T> sign = x => (x % 2 == 0) ? T.One : -T.One;
+
         for (int row = 0; row < matrix.size.Rows; row++)
             for (int col = 0; col < matrix.size.Columns; col++)
-                adjuvate[col, row] = T.CreateChecked(Math.Pow(-1, row + col)) * det(get_sub(matrix.matrix, row, col));
+                adjuvate[col, row] = sign(row + col) * det(get_sub(matrix.matrix, row, col));
+
+        adjuvate.Transpose();
 
         return adjuvate;
     }
-    public Matrix<T> adj() => adj(this);
+    public void Adjuvate() => matrix = Adjuvate(this).matrix;
 
-    public static Matrix<T>? invert(Matrix<T> matrix)
+    public static Matrix<T>? Invert(Matrix<T> matrix)
     {
         T determinant = det(matrix.matrix);
         if (determinant == T.Zero)
             return null;
 
-        return adj(matrix) / determinant;
+        return Adjuvate(matrix) / determinant;
     }
-    public Matrix<T>? inv() => invert(this);
+    public void Invert()
+    {
+        Matrix<T>? temp = Invert(this);
+
+        if (temp is null)
+            throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+
+        matrix = temp.matrix;
+    }
 
     public static Matrix<T> I(int s)
     {
@@ -185,6 +200,8 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return result;
     }
+    public void Multiply<TOther>(Matrix<TOther> matrix) where TOther : INumber<TOther>
+        => this.matrix = Multiply(this, matrix).matrix;
 
     public Vector<T> ToVector() => new(R.First());
 
