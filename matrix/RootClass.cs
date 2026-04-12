@@ -173,6 +173,14 @@ public class RootClass<T> where T : INumber<T>
         return vec;
     }
 
+    public RootClass<T> ForEach(Func<T, T> func)
+    {
+        RootClass<T> result = new(size);
+        for (int i = 0; i < size.Rows; i++)
+            for (int j = 0; j < size.Columns; j++)
+                result[i, j] = func(this[i, j]);
+        return result;
+    }
 
     private static T GetGcd(Vector<T> numbers, double epsilon = 1e-10)
     {

@@ -61,10 +61,17 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         if (!a.IsSquare)
             throw new InvalidOperationException("Matrix must be square for exponentiation.");
 
-        if (power < 0)
-            throw new ArgumentOutOfRangeException(nameof(power), "Power must be non-negative.");
-
         Matrix<T> result = I(a.size.Rows);
+
+        if (power < 0)
+        {
+            if(a.Determinant() == T.Zero)
+                throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+
+            a = Invert(a)!;
+            power = -power;
+        }
+
 
         for (int i = 0; i < power; i++)
             result *= a;
@@ -100,7 +107,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return new(temp);
     }
 
-    public void Transpose() => matrix = Transpose(this).matrix;
+    public Matrix<T> Transpose() => Transpose(this);
 
     private static T[,] get_sub(T[,] matrix, int row, int col)
     {
@@ -156,7 +163,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return adjuvate;
     }
-    public void Adjuvate() => matrix = Adjuvate(this).matrix;
+    public Matrix<T> Adjuvate() => Adjuvate(this);
 
     public static Matrix<T>? Invert(Matrix<T> matrix)
     {
@@ -166,15 +173,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return Adjuvate(matrix) / determinant;
     }
-    public void Invert()
-    {
-        Matrix<T>? temp = Invert(this);
-
-        if (temp is null)
-            throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
-
-        matrix = temp.matrix;
-    }
+    public Matrix<T>? Invert() => Invert(this);
 
     public static Matrix<T> I(int s)
     {
@@ -200,8 +199,8 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return result;
     }
-    public void Multiply<TOther>(Matrix<TOther> matrix) where TOther : INumber<TOther>
-        => this.matrix = Multiply(this, matrix).matrix;
+    public Matrix<T> Multiply<TOther>(Matrix<TOther> matrix) where TOther : INumber<TOther>
+        => Multiply(this, matrix);
 
     public Vector<T> ToVector() => new(R.First());
 

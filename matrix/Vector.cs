@@ -69,7 +69,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
 
         return result;
     }
-    public void ToVectorOfOne() => matrix = ToVectorOfOne(this).matrix;
+    public Vector<T> ToVectorOfOne() => ToVectorOfOne(this);
 
     public static T Norm(Vector<T> v)
     {
@@ -110,7 +110,7 @@ public class Vector<T> : RootClass<T>, IEnumerable<T> where T : INumber<T>
         return result;
     }
 
-    public void Reverse() => matrix = Reverse(this).matrix;
+    public Vector<T> Reverse() => Reverse(this);
 
     public static List<Vector<T>> Base(Vector<T>[] vectors) => BaseOfBase(vectors);
 

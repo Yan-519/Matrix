@@ -104,16 +104,11 @@ internal class Program
         //    Console.WriteLine();
         //}
 
-        Matrix<double> m = new([1.0, 2.0, 3.0],
+        Matrix<double> m = new([10.0, 2.0, 3.0],
                                   [4.0, 5.0, 6.0],
                                   [7.0, 8.0, 9.0]);
 
-        Matrix<int> matrix = new([1, 2, 3],
-                                  [4, 5, 6],
-                                  [7, 8, 9]);
-
-        Console.WriteLine(matrix.IsEqual(m));
-        Console.WriteLine(Matrix<double>.AreEqual(matrix, m));
+        Console.WriteLine((m * (m ^ -2) * m).ForEach(v => Math.Round(v,10)));
 
         //Console.WriteLine(matrix == m);
 
