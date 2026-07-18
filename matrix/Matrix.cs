@@ -2,7 +2,12 @@
 
 namespace matrix;
 
-public class Matrix<T> : RootClass<T> where T : INumber<T>
+public class Matrix<T> : RootClass<T>,
+    IMultiplyOperators<Matrix<T>, Matrix<T>, Matrix<T>>,
+    IAdditionOperators<Matrix<T>, Matrix<T>, Matrix<T>>,
+    ISubtractionOperators<Matrix<T>, Matrix<T>, Matrix<T>>,
+    IDivisionOperators<Matrix<T>, T, Matrix<T>>
+    where T : INumber<T>
 {
     public T[][] R
     {
@@ -28,7 +33,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         }
     }
 
-    public T this[int r, int c]
+    public new T this[int r, int c]
     {
         get => matrix[r, c];
         set => matrix[r, c] = value;
@@ -51,24 +56,23 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
     public Matrix(int rows, int columns) : base(rows, columns) => IsSquare = rows == columns;
 
-    private Matrix(RootClass<T> root) : this(root.size)
-        => matrix = root.source;
+    public Matrix(RootClass<T> root) : this(root.size) => matrix = root.source;
 
-    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => Multiply(a, b);
+    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => MatrixExtensions.Multiply<T, T, T>(a, b);
 
     public static Matrix<T> operator ^(Matrix<T> a, int power)
     {
         if (!a.IsSquare)
             throw new InvalidOperationException("Matrix must be square for exponentiation.");
 
-        Matrix<T> result = I(a.size.Rows);
+        Matrix<T> result = Identity(a.size.Rows);
 
         if (power < 0)
         {
             if(a.Determinant() == T.Zero)
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
-            a = Invert(a)!;
+            a = a.Invert()!;
             power = -power;
         }
 
@@ -80,10 +84,69 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
     }
 
     public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
-    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Add(a, b);
-    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => (Matrix<T>)Subtract(a, b);
+    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Add(a, b));
+    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Subtract(a, b));
 
-    public static T Trace(Matrix<T> matrix)
+    public static Matrix<T> Identity(int s)
+    {
+        Matrix<T> identity = new(s, s);
+
+        for (int i = 0; i < s; i++)
+            identity[i, i] = T.One;
+
+        return identity;
+    }
+
+    public Vector<T> ToVector() => new(R.First());
+
+    public static List<Matrix<T>> Base(Matrix<T>[] matrices)
+        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToList();
+}
+
+public static class MatrixExtensions
+{
+    public static Matrix<T> Multiply<T, T1, T2>(this Matrix<T1> a, Matrix<T2> b) where T1 : INumber<T1> where T2 : INumber<T2> where T : INumber<T>
+    {
+        if (a.size.Columns != b.size.Rows)
+            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
+
+        Matrix<T> result = new(a.size.Rows, b.size.Columns);
+
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < b.size.Columns; j++)
+                for (int k = 0; k < a.size.Columns; k++)
+                    result[i, j] += T.CreateChecked(a[i, k]) * T.CreateChecked(b[k, j]);
+
+        return result;
+    }
+
+    public static Matrix<T>? Invert<T>(this Matrix<T> matrix) where T : INumber<T>
+    {
+        T determinant = det(matrix.matrix);
+        if (determinant == T.Zero)
+            return null;
+
+        return Adjuvate(matrix) / determinant;
+    }
+
+    public static Matrix<T> Adjuvate<T>(this Matrix<T> matrix) where T : INumber<T>
+    {
+        Matrix<T> adjuvate = new(matrix.size);
+
+        Func<int, T> sign = x => (x % 2 == 0) ? T.One : -T.One;
+
+        for (int row = 0; row < matrix.size.Rows; row++)
+            for (int col = 0; col < matrix.size.Columns; col++)
+                adjuvate[col, row] = sign(row + col) * det(get_sub(matrix.matrix, row, col));
+
+        adjuvate.Transpose();
+
+        return adjuvate;
+    }
+
+    public static T Determinant<T>(this Matrix<T> matrix) where T : INumber<T> => det(matrix.matrix);
+
+    public static T Trace<T>(this Matrix<T> matrix) where T : INumber<T>
     {
         int lim = Math.Min(matrix.size.Rows, matrix.size.Columns);
 
@@ -94,22 +157,7 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
         return trace;
     }
 
-    public T Trace() => Trace(this);
-
-    public static Matrix<T> Transpose(Matrix<T> matrix)
-    {
-        T[,] temp = new T[matrix.size.Columns, matrix.size.Rows];
-
-        for (int i = 0; i < matrix.size.Rows; i++)
-            for (int j = 0; j < matrix.size.Columns; j++)
-                temp[j, i] = matrix.matrix[i, j];
-
-        return new(temp);
-    }
-
-    public Matrix<T> Transpose() => Transpose(this);
-
-    private static T[,] get_sub(T[,] matrix, int row, int col)
+    private static T[,] get_sub<T>(T[,] matrix, int row, int col) where T : INumber<T>
     {
         T[,] sub_matrix = new T[matrix.GetLength(0) - 1, matrix.GetLength(1) - 1];
         int sub_row = 0, sub_col = 0;
@@ -130,7 +178,8 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return sub_matrix;
     }
-    private static T det(T[,] matrix)
+
+    private static T det<T>(T[,] matrix) where T : INumber<T>
     {
         if (matrix.GetLength(0) != matrix.GetLength(1))
             throw new InvalidOperationException("Determinant is only defined for square matrices.");
@@ -146,64 +195,4 @@ public class Matrix<T> : RootClass<T> where T : INumber<T>
 
         return determinant;
     }
-    public static T Determinant(Matrix<T> matrix) => det(matrix.matrix);
-    public T Determinant() => Determinant(this);
-
-    public static Matrix<T> Adjuvate(Matrix<T> matrix)
-    {
-        Matrix<T> adjuvate = new(matrix.size);
-
-        Func<int, T> sign = x => (x % 2 == 0) ? T.One : -T.One;
-
-        for (int row = 0; row < matrix.size.Rows; row++)
-            for (int col = 0; col < matrix.size.Columns; col++)
-                adjuvate[col, row] = sign(row + col) * det(get_sub(matrix.matrix, row, col));
-
-        adjuvate.Transpose();
-
-        return adjuvate;
-    }
-    public Matrix<T> Adjuvate() => Adjuvate(this);
-
-    public static Matrix<T>? Invert(Matrix<T> matrix)
-    {
-        T determinant = det(matrix.matrix);
-        if (determinant == T.Zero)
-            return null;
-
-        return Adjuvate(matrix) / determinant;
-    }
-    public Matrix<T>? Invert() => Invert(this);
-
-    public static Matrix<T> I(int s)
-    {
-        Matrix<T> identity = new(s, s);
-
-        for (int i = 0; i < s; i++)
-            identity[i, i] = T.One;
-
-        return identity;
-    }
-
-    public static Matrix<T> Multiply<T1, T2>(Matrix<T1> a, Matrix<T2> b) where T1 : INumber<T1> where T2 : INumber<T2>
-    {
-        if (a.size.Columns != b.size.Rows)
-            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
-
-        Matrix<T> result = new(a.size.Rows, b.size.Columns);
-
-        for (int i = 0; i < a.size.Rows; i++)
-            for (int j = 0; j < b.size.Columns; j++)
-                for (int k = 0; k < a.size.Columns; k++)
-                    result[i, j] += T.CreateChecked(a[i, k]) * T.CreateChecked(b[k, j]);
-
-        return result;
-    }
-    public Matrix<T> Multiply<TOther>(Matrix<TOther> matrix) where TOther : INumber<TOther>
-        => Multiply(this, matrix);
-
-    public Vector<T> ToVector() => new(R.First());
-
-    public static List<Matrix<T>> Base(Matrix<T>[] matrices)
-        => BaseOfBase(matrices).Select(v => v.FromOneD(matrices.First().size)).ToList();
 }

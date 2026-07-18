@@ -91,6 +91,26 @@ internal class Program
         return new Tuple<long, Out>(sw.ElapsedMilliseconds, o);
     }
 
+    public static int[,] RotateMatrix90Clockwise(int[,] matrix)
+    {
+        int rows = matrix.GetLength(0);
+        int cols = matrix.GetLength(1);
+
+        // Create a new matrix with swapped dimensions
+        int[,] rotated = new int[cols, rows];
+
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                // Map original elements to their new rotated positions
+                rotated[c, rows - 1 - r] = matrix[r, c];
+            }
+        }
+
+        return rotated;
+    }
+
 
     private static void Main()
     {
@@ -104,11 +124,24 @@ internal class Program
         //    Console.WriteLine();
         //}
 
-        Matrix<double> m = new([10.0, 2.0, 3.0],
-                                  [4.0, 5.0, 6.0],
-                                  [7.0, 8.0, 9.0]);
+        double[,] matrix = new double[,] { 
+            { 1, 2, 30 }, 
+            { 4, 5, 6 }, 
+            { 7, 8, 9 } };
 
-        Console.WriteLine((m * (m ^ -2) * m).ForEach(v => Math.Round(v,10)));
+        Matrix<double> m = new(matrix);
+
+        Console.WriteLine((m * m.Invert()!).Round(2));
+
+        //int[,] rotated = RotateMatrix90Clockwise(RotateMatrix90Clockwise(matrix));
+        //for (int r = 0; r < rotated.GetLength(0); r++)
+        //{
+        //    for (int c = 0; c < rotated.GetLength(1); c++)
+        //    {
+        //        Console.Write(rotated[r, c] + " ");
+        //    }
+        //    Console.WriteLine();
+        //}
 
         //Console.WriteLine(matrix == m);
 
