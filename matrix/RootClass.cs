@@ -40,6 +40,8 @@ public class RootClass<T>(int rows, int columns) where T : INumber<T>
 
     public static RootClass<T> operator *(RootClass<T> a, T scalar) => RootClassExtensions.Multiply<T, T, T>(a, scalar);
 
+    public static RootClass<T> operator *(RootClass<T> a, RootClass<T> b) => RootClassExtensions.Multiply<T, T, T>(a, b);
+
     public static RootClass<T> operator *(T scalar, RootClass<T> a) => a * scalar;
 
     public static RootClass<T> operator /(RootClass<T> a, T scalar) => a * (T.One / scalar);
@@ -203,6 +205,21 @@ public class RootClass<T>(int rows, int columns) where T : INumber<T>
 
 public static class RootClassExtensions
 {
+    public static RootClass<T> Multiply<T, T1, T2>(this RootClass<T1> a, RootClass<T2> b) where T1 : INumber<T1> where T2 : INumber<T2> where T : INumber<T>
+    {
+        if (a.size.Columns != b.size.Rows)
+            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
+
+        RootClass<T> result = new(a.size.Rows, b.size.Columns);
+
+        for (int i = 0; i < a.size.Rows; i++)
+            for (int j = 0; j < b.size.Columns; j++)
+                for (int k = 0; k < a.size.Columns; k++)
+                    result[i, j] += T.CreateChecked(a[i, k]) * T.CreateChecked(b[k, j]);
+
+        return result;
+    }
+
     public static RootClass<T> Round<T>(this RootClass<T> matrix, int rounded) where T : INumber<T>
     {
         RootClass<T> result = new(matrix.size);

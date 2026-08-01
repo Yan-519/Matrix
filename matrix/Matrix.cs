@@ -58,7 +58,7 @@ public class Matrix<T> : RootClass<T>,
 
     public Matrix(RootClass<T> root) : this(root.size) => matrix = root.source;
 
-    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => MatrixExtensions.Multiply<T, T, T>(a, b);
+    public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Multiply<T, T, T>(a, b));
 
     public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
     public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Add(a, b));
@@ -105,20 +105,7 @@ public class Matrix<T> : RootClass<T>,
 
 public static class MatrixExtensions
 {
-    public static Matrix<T> Multiply<T, T1, T2>(this Matrix<T1> a, Matrix<T2> b) where T1 : INumber<T1> where T2 : INumber<T2> where T : INumber<T>
-    {
-        if (a.size.Columns != b.size.Rows)
-            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
-
-        Matrix<T> result = new(a.size.Rows, b.size.Columns);
-
-        for (int i = 0; i < a.size.Rows; i++)
-            for (int j = 0; j < b.size.Columns; j++)
-                for (int k = 0; k < a.size.Columns; k++)
-                    result[i, j] += T.CreateChecked(a[i, k]) * T.CreateChecked(b[k, j]);
-
-        return result;
-    }
+    
 
     public static Matrix<T>? Invert<T>(this Matrix<T> matrix) where T : INumber<T>
     {

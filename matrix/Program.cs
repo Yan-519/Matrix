@@ -133,6 +133,10 @@ internal class Program
 
         Console.WriteLine((m * m.Invert()!).Round(2));
 
+        Vector<double> x = [1, 5, 8];
+        Console.WriteLine(x);
+        Console.WriteLine(x.Transpose());
+
         //int[,] rotated = RotateMatrix90Clockwise(RotateMatrix90Clockwise(matrix));
         //for (int r = 0; r < rotated.GetLength(0); r++)
         //{

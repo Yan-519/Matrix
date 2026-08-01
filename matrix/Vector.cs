@@ -44,19 +44,9 @@ public class Vector<T> : RootClass<T>,
         set => matrix[r, 0] = value;
     }
 
-    public static Vector<T> operator *(Matrix<T> m, Vector<T> v)
-    {
-        if (m.size.Columns != v.size)
-            throw new InvalidOperationException("Number of columns in the first matrix must match the number of rows in the second matrix.");
+    public static Vector<T> operator *(Vector<T> v, Matrix<T> m) => new(RootClassExtensions.Multiply<T, T, T>(v, m));
 
-        Vector<T> result = new(v.size);
-
-        for (int i = 0; i < m.size.Rows; i++)
-            for (int k = 0; k < m.size.Columns; k++)
-                result[i] += m[i, k] * v[k];
-
-        return result;
-    }
+    public static Vector<T> operator *(Matrix<T> m, Vector<T> v) => new(RootClassExtensions.Multiply<T, T, T>(v, m));
 
     public static Vector<T> operator /(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
     public static Vector<T> operator *(Vector<T> matrix, T scalar) => new((RootClass<T>)matrix * scalar);
