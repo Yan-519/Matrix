@@ -15,7 +15,7 @@ internal class Program
 
         Vector<BigInteger> start = new(0, 1);
 
-        return ((f ^ (n - 1)) * start).First();
+        return ((Matrix<BigInteger>.Pow(f, n - 1)) * start).First();
     }
 
     private static BigInteger standart_fib(int n)

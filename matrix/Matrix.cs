@@ -60,32 +60,32 @@ public class Matrix<T> : RootClass<T>,
 
     public static Matrix<T> operator *(Matrix<T> a, Matrix<T> b) => MatrixExtensions.Multiply<T, T, T>(a, b);
 
-    public static Matrix<T> operator ^(Matrix<T> a, int power)
+    public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
+    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Add(a, b));
+    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Subtract(a, b));
+
+    public static Matrix<T> Pow(Matrix<T> matrix, int power)
     {
-        if (!a.IsSquare)
+        if (!matrix.IsSquare)
             throw new InvalidOperationException("Matrix must be square for exponentiation.");
 
-        Matrix<T> result = Identity(a.size.Rows);
+        Matrix<T> result = Identity(matrix.size.Rows);
 
         if (power < 0)
         {
-            if(a.Determinant() == T.Zero)
+            if (matrix.Determinant() == T.Zero)
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
-            a = a.Invert()!;
+            matrix = matrix.Invert()!;
             power = -power;
         }
 
 
         for (int i = 0; i < power; i++)
-            result *= a;
+            result *= matrix;
 
         return result;
     }
-
-    public static Matrix<T> operator /(Matrix<T> matrix, T scalar) => new((RootClass<T>)matrix / scalar);
-    public static Matrix<T> operator +(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Add(a, b));
-    public static Matrix<T> operator -(Matrix<T> a, Matrix<T> b) => new(RootClassExtensions.Subtract(a, b));
 
     public static Matrix<T> Identity(int s)
     {
