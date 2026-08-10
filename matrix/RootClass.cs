@@ -103,9 +103,9 @@ public class RootClass<T>(int rows, int columns) where T : INumber<T>
         return vec;
     }
 
-    public RootClass<T> ForEach(Func<T, T> func)
+    public RootClass<TOut> ForEach<TOut>(Func<T, TOut> func) where TOut : INumber<TOut>
     {
-        RootClass<T> result = new(size);
+        RootClass<TOut> result = new(size);
         for (int i = 0; i < size.Rows; i++)
             for (int j = 0; j < size.Columns; j++)
                 result[i, j] = func(this[i, j]);
